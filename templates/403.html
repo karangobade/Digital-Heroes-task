@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Forbidden{% endblock %}
+{% block content %}
+<div class="card narrow">
+  <h1>403 — Not your lead</h1>
+  <p class="muted">You don't have permission to view this record.</p>
+  <a href="{{ url_for('dashboard') }}">Back to dashboard</a>
+</div>
+{% endblock %}

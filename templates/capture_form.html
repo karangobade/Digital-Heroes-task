@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Get in touch{% endblock %}
+{% block content %}
+<div class="card narrow">
+  <h1>Talk to our team</h1>
+  <p class="muted">Tell us a bit about what you need and someone will follow up shortly.</p>
+  <form id="capture-form">
+    <label>Full name<input type="text" name="full_name" required></label>
+    <label>Email<input type="email" name="email" required></label>
+    <label>Phone<input type="tel" name="phone"></label>
+    <label>Company<input type="text" name="company"></label>
+    <label>What do you need?<textarea name="message" rows="4"></textarea></label>
+    <button type="submit">Send</button>
+  </form>
+  <p id="form-status" class="muted"></p>
+</div>
+
+<script>
+  const form = document.getElementById('capture-form');
+  const status = document.getElementById('form-status');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const payload = Object.fromEntries(new FormData(form).entries());
+    payload.source = 'web_form';
+    const res = await fetch('/api/leads', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload),
+    });
+    if (res.ok) {
+      form.reset();
+      status.textContent = "Thanks — we'll be in touch.";
+    } else {
+      const err = await res.json();
+      status.textContent = err.message || 'Something went wrong.';
+    }
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="row-between">
+    <h1>{{ 'All leads' if current_user.is_admin else 'My leads' }}</h1>
+    <select id="status-filter">
+      <option value="">All statuses</option>
+      {% for s in statuses %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+    </select>
+  </div>
+
+  <table class="leads-table">
+    <thead>
+      <tr>
+        <th>Name</th><th>Company</th><th>Status</th><th>Assigned to</th><th>Created</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for lead in leads %}
+      <tr class="lead-row" data-status="{{ lead.status }}" onclick="location.href='{{ url_for('lead_detail', lead_id=lead.id) }}'">
+        <td>{{ lead.full_name }}</td>
+        <td>{{ lead.company or '—' }}</td>
+        <td><span class="pill pill-{{ lead.status }}">{{ lead.status }}</span></td>
+        <td>{{ lead.assignee.name if lead.assignee else 'Unassigned' }}</td>
+        <td>{{ lead.created_at.strftime('%d %b %Y') }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5" class="muted">No leads yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+  const filter = document.getElementById('status-filter');
+  filter.addEventListener('change', () => {
+    document.querySelectorAll('.lead-row').forEach(row => {
+      row.style.display = (!filter.value || row.dataset.status === filter.value) ? '' : 'none';
+    });
+  });
+</script>
+{% endblock %}

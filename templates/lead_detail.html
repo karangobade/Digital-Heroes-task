@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}{{ lead.full_name }}{% endblock %}
+{% block content %}
+<a href="{{ url_for('dashboard') }}" class="back-link">&larr; Back to dashboard</a>
+
+<div class="card">
+  <div class="row-between">
+    <h1>{{ lead.full_name }}</h1>
+    <span class="pill pill-{{ lead.status }}" id="status-pill">{{ lead.status }}</span>
+  </div>
+  <p class="muted">{{ lead.email }}{% if lead.phone %} · {{ lead.phone }}{% endif %}{% if lead.company %} · {{ lead.company }}{% endif %}</p>
+  {% if lead.message %}<p>{{ lead.message }}</p>{% endif %}
+
+  <div class="controls-row">
+    <label>Status
+      <select id="status-select">
+        {% for s in statuses %}
+        <option value="{{ s }}" {{ 'selected' if s == lead.status else '' }}>{{ s }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    {% if current_user.is_admin %}
+    <label>Assigned to
+      <select id="assignee-select">
+        <option value="">Unassigned</option>
+        {% for m in members %}
+        <option value="{{ m.id }}" {{ 'selected' if lead.assigned_to_id == m.id else '' }}>{{ m.name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <h2>Notes</h2>
+  <form id="note-form">
+    <textarea id="note-body" rows="3" placeholder="Add a note..."></textarea>
+    <button type="submit">Add note</button>
+  </form>
+  <ul id="notes-list" class="notes-list">
+    {% for note in notes %}
+    <li><strong>{{ note.author.name if note.author else 'Unknown' }}</strong> · {{ note.created_at.strftime('%d %b %Y %H:%M') }}<br>{{ note.body }}</li>
+    {% else %}
+    <li class="muted">No notes yet.</li>
+    {% endfor %}
+  </ul>
+</div>
+
+<div class="card">
+  <h2>Activity trail</h2>
+  <ul class="activity-list">
+    {% for a in activities %}
+    <li>{{ a.created_at.strftime('%d %b %Y %H:%M') }} — <strong>{{ a.actor.name if a.actor else 'system' }}</strong> {{ a.action }}{% if a.detail %} ({{ a.detail }}){% endif %}</li>
+    {% else %}
+    <li class="muted">No activity yet.</li>
+    {% endfor %}
+  </ul>
+</div>
+
+<script>
+  const leadId = {{ lead.id }};
+
+  document.getElementById('status-select').addEventListener('change', async (e) => {
+    const res = await fetch(`/api/leads/${leadId}`, {
+      method: 'PATCH',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({status: e.target.value}),
+    });
+    if (res.ok) location.reload();
+  });
+
+  const assigneeSelect = document.getElementById('assignee-select');
+  if (assigneeSelect) {
+    assigneeSelect.addEventListener('change', async (e) => {
+      const value = e.target.value ? parseInt(e.target.value) : null;
+      const res = await fetch(`/api/leads/${leadId}`, {
+        method: 'PATCH',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({assigned_to_id: value}),
+      });
+      if (res.ok) location.reload();
+    });
+  }
+
+  document.getElementById('note-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const body = document.getElementById('note-body').value.trim();
+    if (!body) return;
+    const res = await fetch(`/api/leads/${leadId}/notes`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({body}),
+    });
+    if (res.ok) location.reload();
+  });
+</script>
+{% endblock %}
