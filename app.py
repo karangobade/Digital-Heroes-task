@@ -48,7 +48,6 @@ def can_view_lead(user, lead):
 
 
 def can_edit_lead(user, lead):
-    # Members may only work leads assigned to them; admins may edit any lead.
     return user.is_admin or lead.assigned_to_id == user.id
 
 
@@ -122,16 +121,7 @@ def lead_detail(lead_id):
     )
 
 
-# ---------------------------------------------------------------------------
-# JSON API
-#
-# Contract summary (see README for full docs):
-#   POST   /api/leads              public — create a lead from the capture form
-#   GET    /api/leads              auth   — list leads (paginated + filterable)
-#   GET    /api/leads/<id>         auth   — lead detail incl. notes + activity trail
-#   PATCH  /api/leads/<id>         auth   — update status and/or assignment
-#   POST   /api/leads/<id>/notes   auth   — add a timestamped note
-# ---------------------------------------------------------------------------
+
 
 @app.route("/api/leads", methods=["POST"])
 def api_create_lead():
@@ -277,10 +267,6 @@ def api_add_note(lead_id):
 
     return jsonify(note.to_dict()), 201
 
-
-# ---------------------------------------------------------------------------
-# CLI helper: seed the database with demo users + leads
-# ---------------------------------------------------------------------------
 
 @app.cli.command("seed")
 def seed():
